@@ -779,20 +779,6 @@ rules:
   - DOMAIN-SUFFIX,wip3.adobe.com,🛑 全球拦截
   - DOMAIN-SUFFIX,wwis-dubc1-vip60.adobe.com,🛑 全球拦截
   - DOMAIN-SUFFIX,adserver.unityads.unity3d.com,🛑 全球拦截
-  - DOMAIN-SUFFIX,33.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,adproxy.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,al.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,alert.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,applogapi.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,c.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,cmx.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,dspmnt.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,pcd.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,push.app.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,pvx.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,rd.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,rdx.autohome.com.cn,🛑 全球拦截
-  - DOMAIN-SUFFIX,stats.autohome.com.cn,🛑 全球拦截
   - DOMAIN-SUFFIX,a.baidu.cn,🛑 全球拦截
   - DOMAIN-SUFFIX,a.baidu.com,🛑 全球拦截
   - DOMAIN-SUFFIX,ad.duapps.com,🛑 全球拦截
@@ -2010,6 +1996,7 @@ rules:
   - DOMAIN-SUFFIX,spotifycdn.net,🚀 节点选择
   - DOMAIN-SUFFIX,tidal-cms.s3.amazonaws.com,🚀 节点选择
   - DOMAIN-SUFFIX,tidal.com,🚀 节点选择
+  - DOMAIN-SUFFIX,autohome.com,🚀 节点选择
   - DOMAIN-SUFFIX,tidalhifi.com,🚀 节点选择
   - DOMAIN,hamifans.emome.net,🚀 节点选择
   - DOMAIN-SUFFIX,skyking.com.tw,🚀 节点选择
