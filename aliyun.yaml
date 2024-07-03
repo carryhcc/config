@@ -2010,6 +2010,7 @@ rules:
   - DOMAIN-SUFFIX,tiktok.com,🚀 节点选择
   - DOMAIN-SUFFIX,tiktokcdn.com,🚀 节点选择
   - DOMAIN-SUFFIX,tiktokv.com,🚀 节点选择
+  - DOMAIN-SUFFIX,linux.do,🚀 节点选择
   - DOMAIN-KEYWORD,ttvnw,🚀 节点选择
   - DOMAIN-SUFFIX,ext-twitch.tv,🚀 节点选择
   - DOMAIN-SUFFIX,jtvnw.net,🚀 节点选择
