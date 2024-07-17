@@ -11,7 +11,6 @@ proxy-groups:
     type: select
     proxies:
       - DIRECT
-      - vmess|0vrC.love@xray.com
   - name: 🎯 全球直连
     type: select
     proxies:
@@ -27,7 +26,6 @@ proxy-groups:
     proxies:
       - 🚀 节点选择
       - 🎯 全球直连
-      - vmess|0vrC.love@xray.com
 rules:
   - DOMAIN-SUFFIX,acl4.ssr,🎯 全球直连
   - DOMAIN-SUFFIX,ip6-localhost,🎯 全球直连
