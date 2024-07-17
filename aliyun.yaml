@@ -2036,6 +2036,7 @@ rules:
   - DOMAIN-SUFFIX,pornhubpremium.com,🚀 节点选择
   - DOMAIN-SUFFIX,qobuz.com,🚀 节点选择
   - DOMAIN-SUFFIX,p-cdn.us,🚀 节点选择
+  - DOMAIN-SUFFIX,linux.do,🚀 节点选择
   - DOMAIN-SUFFIX,sndcdn.com,🚀 节点选择
   - DOMAIN-SUFFIX,soundcloud.com,🚀 节点选择
   - DOMAIN-KEYWORD,-spotify-,🚀 节点选择
