@@ -5,7 +5,7 @@ mode: Rule
 log-level: info
 external-controller: :9090
 proxies:
-  - {name: vless, server: 47.236.23.136, port: 27506, reality-opts: {public-key: mdNSvPyTEFhlqjQB18_ItK2mUH-i7rt1HO4E3SeOz10, short-id: 8d4333c9}, client-fingerprint: chrome, type: vless, uuid: 795beb00-098e-4eba-ba6a-c4afa7d2183a, tls: true, tfo: false, flow: xtls-rprx-vision, skip-cert-verify: false, servername: www.yahoo.com, network: tcp}
+  - {name: test, server: 47.236.23.136, port: 29319, reality-opts: {public-key: 0UQ1RYxPtZZMQrqQQxP1z6dwcsHMMOVcKa0JQpyTBRw, short-id: 0f86dd76}, client-fingerprint: chrome, type: vless, uuid: 9cee58e2-3859-40a2-8e14-ee393147e3ea, tls: true, tfo: false, flow: xtls-rprx-vision, skip-cert-verify: false, servername: www.yahoo.com, network: tcp}
 proxy-groups:
   - name: 🚀 节点选择
     type: select
