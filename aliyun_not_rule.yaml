@@ -16,27 +16,6 @@ dns:
     - tls://dns.google:853
 proxies:
   - {name: test, server: 47.236.23.136, port: 29319, reality-opts: {public-key: 0UQ1RYxPtZZMQrqQQxP1z6dwcsHMMOVcKa0JQpyTBRw, short-id: 0f86dd76}, client-fingerprint: chrome, type: vless, uuid: 9cee58e2-3859-40a2-8e14-ee393147e3ea, tls: true, tfo: false, flow: xtls-rprx-vision, skip-cert-verify: false, servername: www.yahoo.com, network: tcp}
-proxy-providers:
-  yyjc:
-    type: http
-    url: https://proxy-provider-converter-lime-three.vercel.app/api/convert?url=https%3A%2F%2Fsub3.smallstrawberry.com%2Fapi%2Fv1%2Fclient%2Fsubscribe%3Ftoken%3Dp0p1kl2w8thniafpky3j5dhdh00jhr3o&target=clash
-    interval: 3600
-    path: ./sub3.smallstrawberry.com.yaml
-    health-check:
-      enable: true
-      interval: 600
-      # lazy: true
-      url: http://www.gstatic.com/generate_204
-  pokemon:
-    type: http
-    url: https://proxy-provider-converter-lime-three.vercel.app/api/convert?url=https%3A%2F%2F1a3c3cd2c0f0debe81cb00d101114237.52pokemon.xyz%2Fapi%2Fv1%2Fclient%2Fsubscribe%3Ftoken%3Db31ad8b3f2e95cb558e5ee8028cc0356&target=clash
-    interval: 3600
-    path: ./1a3c3cd2c0f0debe81cb00d101114237.52pokemon.xyz.yaml
-    health-check:
-      enable: true
-      interval: 600
-      # lazy: true
-      url: http://www.gstatic.com/generate_204
 
 
 proxy-groups:
@@ -49,20 +28,7 @@ proxy-groups:
     proxies:
       - PROXY
       - DIRECT
-  - name: yyjc
-    type: select
-    use:
-      - yyjc
-    proxies:
-      - Proxy
-      - DIRECT
-  - name: pokemon
-    type: select
-    use:
-      - pokemon
-    proxies:
-      - Proxy
-      - DIRECT
+
     
 rule-providers:
   reject:
