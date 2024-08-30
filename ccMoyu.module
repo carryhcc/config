@@ -1,6 +1,8 @@
-# 禁止访问软件走代理 cc测试专用
+
 #!url=https://raw.githubusercontent.com/carryhcc/config/main/ccMoyu.module
 #!name=ccMoyu
+#!homepage=https://github.com/carryhcc/config
+#!desc=禁止访问软件走代理 cc测试专用
 [Rule]
 DOMAIN-SUFFIX,xiaohongshu.com,PROXY
 DOMAIN-SUFFIX,autohome.com,PROXY
