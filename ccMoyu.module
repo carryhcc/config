@@ -1,0 +1,7 @@
+# 禁止访问软件走代理 cc测试专用
+[Rule]
+DOMAIN-SUFFIX,xiaohongshu.com,PROXY
+DOMAIN-SUFFIX,autohome.com,PROXY
+DOMAIN-SUFFIX,bilibili.com,PROXY
+DOMAIN-SUFFIX,biliapi.com,PROXY
+# DOMAIN,test.xxx,PROXY
