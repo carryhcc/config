@@ -5,6 +5,8 @@
 #!desc=禁止访问软件走代理 cc测试专用
 [Rule]
 DOMAIN-SUFFIX,xiaohongshu.com,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?xiaohongshu\.com.*$",PROXY
 DOMAIN-SUFFIX,autohome.com,PROXY
 DOMAIN-SUFFIX,bilibili.com,PROXY
 DOMAIN-SUFFIX,biliapi.com,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?bili\.com.*$",PROXY
