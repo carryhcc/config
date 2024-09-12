@@ -1899,6 +1899,7 @@ rules:
   - DOMAIN-SUFFIX,5itv.tv,🚀 节点选择
   - DOMAIN-SUFFIX,ocnttv.com,🚀 节点选择
   - DOMAIN-SUFFIX,workers.dev,🚀 节点选择
+  - DOMAIN-SUFFIX,pages.dev,🚀 节点选择
   - DOMAIN-SUFFIX,cws-hulu.conviva.com,🚀 节点选择
   - DOMAIN-SUFFIX,hulu.com,🚀 节点选择
   - DOMAIN-SUFFIX,hulu.hb.omtrdc.net,🚀 节点选择
