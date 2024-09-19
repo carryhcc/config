@@ -16,6 +16,7 @@ dns:
     - tls://dns.google:853
 proxies:
   - {name: test, server: 47.236.23.136, port: 29319, reality-opts: {public-key: 0UQ1RYxPtZZMQrqQQxP1z6dwcsHMMOVcKa0JQpyTBRw, short-id: 0f86dd76}, client-fingerprint: chrome, type: vless, uuid: 9cee58e2-3859-40a2-8e14-ee393147e3ea, tls: true, tfo: false, flow: xtls-rprx-vision, skip-cert-verify: false, servername: www.yahoo.com, network: tcp}
+  - {name: Hysteria2, server: 47.236.23.136, port: 15537, client-fingerprint: chrome, type: hysteria2, password: RFkm11HB9PmavCRNy0ysYGFl5Vo, auth: RFkm11HB9PmavCRNy0ysYGFl5Vo, sni: bing.com, skip-cert-verify: false}
 proxy-groups:
   - name: 🚀 节点选择
     type: select
@@ -23,6 +24,7 @@ proxy-groups:
       - ♻️ 自动选择
       - DIRECT
       - test
+      - Hysteria2
   - name: ♻️ 自动选择
     type: url-test
     url: http://www.gstatic.com/generate_204
@@ -30,6 +32,7 @@ proxy-groups:
     tolerance: 50
     proxies:
       - test
+      - Hysteria2
   - name: 🎯 全球直连
     type: select
     proxies:
