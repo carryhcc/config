@@ -11,11 +11,18 @@ DOMAIN-SUFFIX,xiaohongshu.com,PROXY
 URL-REGEX,"^https?:\/\/(.*\.)?xiaohongshu\.com.*$",PROXY
 
 DOMAIN-SUFFIX,autohome.com,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?autohome\.com.*$",PROXY
 
 DOMAIN-SUFFIX,hdslb.com,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?hdslb\.com.*$",PROXY
 DOMAIN-SUFFIX,szbdyd.com,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?szbdyd\.com.*$",PROXY
 DOMAIN-SUFFIX,bilivideo.com,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?bilivideo\.com.*$",PROXY
 DOMAIN-SUFFIX,akamaized.net,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?akamaized\.net.*$",PROXY
 DOMAIN-SUFFIX,bilibili.com,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?bilibili\.com.*$",PROXY
 DOMAIN-SUFFIX,biliapi.com,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?biliapi\.com.*$",PROXY
 URL-REGEX,"^https?:\/\/(.*\.)?bili\.com.*$",PROXY
