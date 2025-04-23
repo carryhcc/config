@@ -4,9 +4,18 @@
 #!homepage=https://github.com/carryhcc/config
 #!desc=禁止访问软件走代理 cc测试专用
 [Rule]
+
+DOMAIN-SUFFIX,xhscdn.com,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?xhscdn\.com.*$",PROXY
 DOMAIN-SUFFIX,xiaohongshu.com,PROXY
 URL-REGEX,"^https?:\/\/(.*\.)?xiaohongshu\.com.*$",PROXY
+
 DOMAIN-SUFFIX,autohome.com,PROXY
+
+DOMAIN-SUFFIX,hdslb.com,PROXY
+DOMAIN-SUFFIX,szbdyd.com,PROXY
+DOMAIN-SUFFIX,bilivideo.com,PROXY
+DOMAIN-SUFFIX,akamaized.net,PROXY
 DOMAIN-SUFFIX,bilibili.com,PROXY
 DOMAIN-SUFFIX,biliapi.com,PROXY
 URL-REGEX,"^https?:\/\/(.*\.)?bili\.com.*$",PROXY
