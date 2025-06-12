@@ -1,0 +1,22 @@
+#!url=https://raw.githubusercontent.com/carryhcc/config/main/ClashOfClansRules.module
+#!name=ccMoyu
+#!homepage=https://github.com/carryhcc/config
+#!desc=部落冲突不走代理 cc测试专用
+[Rule]
+DOMAIN-SUFFIX,superservice.net,PROXY
+DOMAIN-SUFFIX,superservers.net,PROXY
+DOMAIN-SUFFIX,superservers.com,PROXY
+DOMAIN-SUFFIX,clashofclans.com,PROXY
+DOMAIN-SUFFIX,supercell.com,PROXY
+DOMAIN-SUFFIX,supercell.net,PROXY
+DOMAIN-SUFFIX,scdn.co,PROXY
+DOMAIN-SUFFIX,sccdn.net,PROXY
+
+URL-REGEX,"^https?:\/\/(.*\.)?superservice\.net.*$",PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?superservers\.net.*$",PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?superservers\.com.*$",PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?clashofclans\.com.*$",PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?supercell\.com.*$",PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?supercell\.net.*$",PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?scdn\.co.*$",PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?sccdn\.net.*$",PROXY
