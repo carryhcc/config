@@ -14,6 +14,8 @@ DOMAIN-SUFFIX,autohome.com,PROXY
 DOMAIN-SUFFIX,v2ex.com,PROXY
 # linux do
 DOMAIN-SUFFIX,linux.do,PROXY
+# anlu
+DOMAIN-SUFFIX,anlu.fun,PROXY
 # bilibili
 DOMAIN-SUFFIX,szbdyd.com,PROXY
 DOMAIN-SUFFIX,bilivideo.com,PROXY
