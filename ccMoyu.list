@@ -13,6 +13,15 @@ URL-REGEX,"^https?:\/\/(.*\.)?xiaohongshu\.com.*$",PROXY
 DOMAIN-SUFFIX,autohome.com,PROXY
 URL-REGEX,"^https?:\/\/(.*\.)?autohome\.com.*$",PROXY
 
+DOMAIN-SUFFIX,v2ex.com,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?v2ex\.com.*$",PROXY
+
+DOMAIN-SUFFIX,linux.do,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?linux\.do.*$",PROXY
+
+DOMAIN-SUFFIX,autohome.com,PROXY
+URL-REGEX,"^https?:\/\/(.*\.)?autohome\.com.*$",PROXY
+
 DOMAIN-SUFFIX,hdslb.com,PROXY
 URL-REGEX,"^https?:\/\/(.*\.)?hdslb\.com.*$",PROXY
 DOMAIN-SUFFIX,szbdyd.com,PROXY
