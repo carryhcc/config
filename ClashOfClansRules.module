@@ -1,7 +1,7 @@
 #!url=https://raw.githubusercontent.com/carryhcc/config/main/ClashOfClansRules.module
 #!name=ccMoyu
 #!homepage=https://github.com/carryhcc/config
-#!desc=部落冲突不走代理 cc测试专用
+#!desc=部落冲突
 [Rule]
 DOMAIN-SUFFIX,superservice.net,PROXY
 DOMAIN-SUFFIX,superservers.net,PROXY
