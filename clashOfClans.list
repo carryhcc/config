@@ -1,0 +1,4 @@
+# 部落冲突（Clash of Clans）代理规则
+DOMAIN-SUFFIX,clashofclans.com,PROXY
+DOMAIN-SUFFIX,supercell.com,PROXY
+DOMAIN-SUFFIX,supercellgames.com,PROXY
