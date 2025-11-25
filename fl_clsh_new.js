@@ -1,8 +1,24 @@
-/*
- * =================================================================
- * 辅助函数 (Helpers)
- * =================================================================
- */
+// 规则
+const RULES_CONFIG = [
+//  "IP-CIDR,10.19.135.234/32,节点选择",
+//  "DST-PORT,7236,节点选择",
+  "RULE-SET,LocalAreaNetwork,DIRECT",
+  "RULE-SET,UnBan,DIRECT",
+  "RULE-SET,BanAD,广告拦截",
+  "RULE-SET,BanProgramAD,应用净化",
+  "RULE-SET,ProxyGFWlist,节点选择",
+  "RULE-SET,ChinaDomain,DIRECT",
+  "RULE-SET,ChinaCompanyIp,DIRECT",
+  "RULE-SET,Download,DIRECT",
+  "RULE-SET,AI,AI节点", // 新增AI规则集，匹配AI相关流量到AI节点分组
+  "DOMAIN-SUFFIX,cloudflare.com,节点选择",
+  "DOMAIN-SUFFIX,anlu.fun,节点选择",
+  "DOMAIN-SUFFIX,linux.do,节点选择",
+  "DOMAIN-SUFFIX,googleapis.com,节点选择",
+  "DOMAIN-SUFFIX,antigravity.google,节点选择",
+  "GEOIP,CN,DIRECT",
+  "MATCH,漏网之鱼"
+];
 
 /**
  * 安全地转义用于正则表达式的字符串。
@@ -65,7 +81,7 @@ const FILTER_KEYWORDS = [
   '支持', '10x', '8x', '6x'
 ];
 
-// 图标集 (统一管理)
+// 图标集 (统一管理) - 新增AI图标
 const ICONS = {
   US: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png",
   JP: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png",
@@ -78,7 +94,8 @@ const ICONS = {
   GLOBAL: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Global.png",
   AD_BLACK: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AdBlack.png",
   HIJACKING: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hijacking.png",
-  FINAL: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png"
+  FINAL: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png",
+  AI: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AI.png" // AI专用图标
 };
 
 // 地区过滤规则
@@ -105,7 +122,7 @@ const REGION_FILTERS = {
   }
 };
 
-// 规则提供者
+// 规则提供者 - 新增AI规则集配置
 const RULE_PROVIDERS_CONFIG = {
   LocalAreaNetwork: {
     url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/LocalAreaNetwork.list",
@@ -138,22 +155,13 @@ const RULE_PROVIDERS_CONFIG = {
   Download: {
     url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Download.list",
     path: "./ruleset/Download.list", behavior: "classical", interval: 86400, format: "text", type: "http"
+  },
+  // 新增AI规则集
+  AI: {
+    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/AI.list",
+    path: "./ruleset/AI.list", behavior: "classical", interval: 86400, format: "text", type: "http"
   }
 };
-
-// 规则
-const RULES_CONFIG = [
-  "RULE-SET,LocalAreaNetwork,DIRECT",
-  "RULE-SET,UnBan,DIRECT",
-  "RULE-SET,BanAD,广告拦截",
-  "RULE-SET,BanProgramAD,应用净化",
-  "RULE-SET,ProxyGFWlist,节点选择",
-  "RULE-SET,ChinaDomain,DIRECT",
-  "RULE-SET,ChinaCompanyIp,DIRECT",
-  "RULE-SET,Download,DIRECT",
-  "GEOIP,CN,DIRECT",
-  "MATCH,漏网之鱼"
-];
 
 /*
  * =================================================================
@@ -238,12 +246,14 @@ function buildProxyGroups(classification, regionFilters, icons) {
   // --- 动态构建代理列表 ---
   const nodeSelectionProxies = [
     ...availableRegions,
+    "AI节点", // 新增AI节点到核心选择列表
     ...(hasOtherNodes ? ["其他节点"] : []),
     "自动选择", "手动切换", "DIRECT"
   ];
 
   const finalProxies = [
     "节点选择",
+    "AI节点", // 新增AI节点到漏网之鱼列表
     ...availableRegions,
     ...(hasOtherNodes ? ["其他节点"] : []),
     "自动选择", "手动切换", "DIRECT"
@@ -251,6 +261,7 @@ function buildProxyGroups(classification, regionFilters, icons) {
 
   const globalProxies = [
     "节点选择", "自动选择", "手动切换",
+    "AI节点", // 新增AI节点到GLOBAL列表
     ...availableRegions,
     ...(hasOtherNodes ? ["其他节点"] : []),
     "广告拦截", "应用净化", "漏网之鱼"
@@ -284,7 +295,20 @@ function buildProxyGroups(classification, regionFilters, icons) {
     }));
   }
 
-  // --- 3. 其他节点组 ---
+  // --- 新增 3. AI节点分组 (单独选择某个节点) ---
+  proxyGroups.push({
+    name: "AI节点",
+    icon: icons.AI,
+    type: "select", // select类型允许手动选择单个节点
+    "include-all": true, // 包含所有可用节点
+    proxies: [
+      ...availableRegions, // 所有地区节点
+      ...(hasOtherNodes ? ["其他节点"] : []),
+      "自动选择", "手动切换", "DIRECT"
+    ]
+  });
+
+  // --- 4. 其他节点组 ---
   if (hasOtherNodes) {
     // 构建 "exclude-filter" 所需的联合正则字符串
     const excludePattern = Object.values(regionFilters)
@@ -297,7 +321,7 @@ function buildProxyGroups(classification, regionFilters, icons) {
     }));
   }
 
-  // --- 4. 功能性分组 ---
+  // --- 5. 功能性分组 ---
   proxyGroups.push({
     name: "广告拦截",
     icon: icons.AD_BLACK,
