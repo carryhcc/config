@@ -1,92 +1,21 @@
-/*
- * =================================================================
- * 辅助函数 (Helpers)
- * =================================================================
- */
-// 规则
-const RULES_CONFIG = [
-//  "IP-CIDR,10.19.135.234/32,节点选择",
-//  "DST-PORT,7236,节点选择",
-  "RULE-SET,LocalAreaNetwork,DIRECT",
-  "RULE-SET,UnBan,DIRECT",
-  "RULE-SET,BanAD,广告拦截",
-  "RULE-SET,BanProgramAD,应用净化",
-  "RULE-SET,ProxyGFWlist,节点选择",
-  "RULE-SET,ChinaDomain,DIRECT",
-  "RULE-SET,ChinaCompanyIp,DIRECT",
-  "RULE-SET,Download,DIRECT",
-  "RULE-SET,AI,AI节点", // 新增AI规则集，匹配AI相关流量到AI节点分组
-  "DOMAIN-SUFFIX,cloudflare.com,节点选择",
-  "DOMAIN-SUFFIX,anlu.fun,节点选择",
-  "DOMAIN-SUFFIX,linux.do,节点选择",
-  "DOMAIN-SUFFIX,googleapis.com,节点选择",
-  "DOMAIN-SUFFIX,antigravity.google,节点选择",
-  "GEOIP,CN,DIRECT",
-  "MATCH,漏网之鱼"
-];
-
 /**
- * 安全地转义用于正则表达式的字符串。
- * @param {string} s 要转义的字符串
- * @returns {string} 转义后的字符串
+ * Clash Verge Rev 增强型预处理器脚本 (修复重复项优化版)
  */
-const escapeForRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-/**
- * 编译正则表达式，并提供回退机制。
- * @param {string} pattern 原始正则字符串 (可能包含 (?i))
- * @returns {RegExp} 编译后的 RegExp 对象
- */
-function compileRegex(pattern) {
-  // 移除 JS 不支持的 (?i) 内联标志，我们将使用 'i' flag 代替
-  const cleanPattern = String(pattern || '').replace(/\(\?i\)/g, '');
-  try {
-    return new RegExp(cleanPattern, 'i');
-  } catch (e) {
-    console.warn(`无效的正则表达式: "${pattern}". 已回退到安全匹配。`);
-    // 回退：按 '|' 分割，转义每个部分，然后重新组合
-    const safePattern = cleanPattern
-      .split('|')
-      .map(escapeForRegex)
-      .join('|');
-    return new RegExp(safePattern, 'i');
-  }
-}
-
-/**
- * 创建一个标准的 URL-TEST 代理组。
- * @param {string} name 组名
- * @param {string} icon 图标 URL
- * @param {object} props 额外的属性 (例如 "include-all", "filter", "exclude-filter")
- * @returns {object} 代理组对象
- */
-function createUrlTestGroup(name, icon, props) {
-  return {
-    name: name,
-    icon: icon,
-    type: "url-test",
-    interval: 300,
-    tolerance: 50,
-    ...props
-  };
-}
 
 /*
  * =================================================================
- * 静态配置数据 (Static Configuration Data)
+ * 1. 配置中心 (Configuration)
  * =================================================================
  */
 
-// 过滤关键词列表
 const FILTER_KEYWORDS = [
   '群', '邀请', '返利', '循环', '官网', '客服', '网站', '网址', '获取',
   '订阅', '流量', '到期', '机场', '下次', '版本', '官址', '备用', '过期',
   '已用', '联系', '邮箱', '工单', '贩卖', '通知', '倒卖', '防止', '国内',
   '建议', '地址', '频道', '无法', '说明', '使用', '提示', '特别', '访问',
-  '支持', '10x', '8x', '6x', '香港', 'HongKong', 'HK'
+  '支持', '10x', '9x', '8x', '7x', '6x', '5x', '4x'
 ];
 
-// 图标集 (统一管理) - 新增AI图标
 const ICONS = {
   US: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png",
   JP: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png",
@@ -97,301 +26,151 @@ const ICONS = {
   AUTO: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png",
   MANUAL: "https://testingcf.jsdelivr.net/gh/shindgewongxj/WHATSINStash@master/icon/select.png",
   GLOBAL: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Global.png",
-  AD_BLACK: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AdBlack.png",
-  HIJACKING: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hijacking.png",
+  AD: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AdBlack.png",
+  CLEAN: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hijacking.png",
   FINAL: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png",
-  AI: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AI.png" // AI专用图标
+  AI: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AI.png"
 };
 
-// 地区过滤规则
-const REGION_FILTERS = {
-  "美国节点": {
-    icon: ICONS.US,
-    filter: "(?i)美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|US|United States"
-  },
-  "日本节点": {
-    icon: ICONS.JP,
-    filter: "(?i)日本|川日|东京|大阪|泉日|埼玉|沪日|深日|JP|Japan"
-  },
-  "狮城节点": {
-    icon: ICONS.SG,
-    filter: "(?i)新加坡|坡|狮城|SG|Singapore"
-  },
-  "香港节点": {
-    icon: ICONS.HK,
-    filter: "(?i)港|HK|hk|Hong Kong|HongKong|hongkong"
-  },
-  "台湾节点": {
-    icon: ICONS.TW,
-    filter: "(?i)台|新北|彰化|TW|Taiwan"
-  }
-};
+const REGIONS = [
+  { name: "香港节点", icon: ICONS.HK, filter: "(?i)港|HK|hk|Hong Kong|HongKong" },
+  { name: "日本节点", icon: ICONS.JP, filter: "(?i)日本|东京|大阪|埼玉|JP|Japan" },
+  { name: "美国节点", icon: ICONS.US, filter: "(?i)美|波特兰|达拉斯|俄勒冈|US|United States" },
+  { name: "狮城节点", icon: ICONS.SG, filter: "(?i)新加坡|坡|狮城|SG|Singapore" },
+  { name: "台湾节点", icon: ICONS.TW, filter: "(?i)台|新北|彰化|TW|Taiwan" }
+];
 
-// 规则提供者 - 新增AI规则集配置
-const RULE_PROVIDERS_CONFIG = {
-  LocalAreaNetwork: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/LocalAreaNetwork.list",
-    path: "./ruleset/LocalAreaNetwork.list", behavior: "classical", interval: 86400, format: "text", type: "http"
-  },
-  UnBan: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/UnBan.list",
-    path: "./ruleset/UnBan.list", behavior: "classical", interval: 86400, format: "text", type: "http"
-  },
-  BanAD: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanAD.list",
-    path: "./ruleset/BanAD.list", behavior: "classical", interval: 86400, format: "text", type: "http"
-  },
-  BanProgramAD: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanProgramAD.list",
-    path: "./ruleset/BanProgramAD.list", behavior: "classical", interval: 86400, format: "text", type: "http"
-  },
-  ProxyGFWlist: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ProxyGFWlist.list",
-    path: "./ruleset/ProxyGFWlist.list", behavior: "classical", interval: 86400, format: "text", type: "http"
-  },
-  ChinaDomain: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaDomain.list",
-    path: "./ruleset/ChinaDomain.list", behavior: "domain", interval: 86400, format: "text", type: "http"
-  },
-  ChinaCompanyIp: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaCompanyIp.list",
-    path: "./ruleset/ChinaCompanyIp.list", behavior: "ipcidr", interval: 86400, format: "text", type: "http"
-  },
-  Download: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Download.list",
-    path: "./ruleset/Download.list", behavior: "classical", interval: 86400, format: "text", type: "http"
-  },
-  // 新增AI规则集
-  AI: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/AI.list",
-    path: "./ruleset/AI.list", behavior: "classical", interval: 86400, format: "text", type: "http"
-  }
+const RULE_PROVIDERS_BASE = {
+  "AI": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/AI.list",
+  "LocalAreaNetwork": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/LocalAreaNetwork.list",
+  "UnBan": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/UnBan.list",
+  "BanAD": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanAD.list",
+  "BanProgramAD": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanProgramAD.list",
+  "ProxyGFWlist": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ProxyGFWlist.list",
+  "ChinaDomain": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaDomain.list",
+  "ChinaCompanyIp": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaCompanyIp.list",
+  "Download": "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Download.list"
 };
 
 /*
  * =================================================================
- * 核心处理函数 (Core Processing Functions)
+ * 2. 辅助工具 (Utilities)
  * =================================================================
  */
 
-/**
- * 1. 按关键词过滤代理
- */
-function filterProxiesByKeywords(proxies, keywords) {
-  const keywordPattern = keywords.map(escapeForRegex).join('|');
-  const keywordRegex = new RegExp(keywordPattern, 'i');
-
-  return proxies.filter(p => {
-    const name = p && typeof p.name === 'string' ? p.name : '';
-    return !keywordRegex.test(name);
-  });
-}
-
-/**
- * 2. 将代理分类到地区和“其他”
- * (性能优化：单次遍历)
- */
-function classifyProxies(proxies, regionFilters) {
-  const compiledFilters = [];
-  const regionProxies = {};
-  const availableRegions = [];
-  const otherProxies = [];
-
-  // 预编译正则，并初始化 regionProxies 映射
-  for (const [regionName, regionConfig] of Object.entries(regionFilters)) {
-    compiledFilters.push({
-      name: regionName,
-      regex: compileRegex(regionConfig.filter)
-    });
-    regionProxies[regionName] = [];
+const safeRegex = (str) => {
+  try {
+    return new RegExp(str.replace(/\(\?i\)/g, ''), 'i');
+  } catch (e) {
+    return new RegExp(str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
   }
+};
 
-  // 单次遍历进行分类
-  for (const proxy of proxies) {
-    const name = (proxy && proxy.name) || '';
-    let matched = false;
-
-    // 尝试匹配每个地区
-    for (const filter of compiledFilters) {
-      if (filter.regex.test(name)) {
-        regionProxies[filter.name].push(proxy);
-        matched = true;
-        break;
-      }
-    }
-
-    // 未匹配到任何地区
-    if (!matched) {
-      otherProxies.push(proxy);
-    }
-  }
-
-  // 检查哪些地区真的有节点
-  for (const [regionName, proxies] of Object.entries(regionProxies)) {
-    if (proxies.length > 0) {
-      availableRegions.push(regionName);
-    }
-  }
-
-  return {
-    availableRegions,
-    regionProxies,
-    otherProxies,
-    hasOtherNodes: otherProxies.length > 0
-  };
-}
-
-/**
- * 3. 构建代理组
- */
-function buildProxyGroups(classification, regionFilters, icons) {
-  const { availableRegions, hasOtherNodes } = classification;
-  const proxyGroups = [];
-
-  // --- 动态构建代理列表 ---
-  const nodeSelectionProxies = [
-    ...availableRegions,
-    "AI节点", // 新增AI节点到核心选择列表
-    ...(hasOtherNodes ? ["其他节点"] : []),
-    "自动选择", "手动切换", "DIRECT"
-  ];
-
-  const finalProxies = [
-    "节点选择",
-    "AI节点", // 新增AI节点到漏网之鱼列表
-    ...availableRegions,
-    ...(hasOtherNodes ? ["其他节点"] : []),
-    "自动选择", "手动切换", "DIRECT"
-  ];
-
-  const globalProxies = [
-    "节点选择", "自动选择", "手动切换",
-    "AI节点", // 新增AI节点到GLOBAL列表
-    ...availableRegions,
-    ...(hasOtherNodes ? ["其他节点"] : []),
-    "广告拦截", "应用净化", "漏网之鱼"
-  ];
-
-  // --- 1. 核心选择组 ---
-  proxyGroups.push({
-    name: "节点选择",
-    icon: icons.PROXY,
-    type: "select",
-    proxies: nodeSelectionProxies
-  });
-
-  proxyGroups.push(createUrlTestGroup("自动选择", icons.AUTO, {
-    "include-all": true
-  }));
-
-  proxyGroups.push({
-    name: "手动切换",
-    icon: icons.MANUAL,
-    "include-all": true,
-    type: "select"
-  });
-
-  // --- 2. 地区分组 ---
-  for (const regionName of availableRegions) {
-    const regionConfig = regionFilters[regionName];
-    proxyGroups.push(createUrlTestGroup(regionName, regionConfig.icon, {
-      "include-all": true,
-      filter: regionConfig.filter // 使用原始 filter 字符串
-    }));
-  }
-
-  // --- 新增 3. AI节点分组 (单独选择某个节点) ---
-  proxyGroups.push({
-    name: "AI节点",
-    icon: icons.AI,
-    type: "select", // select类型允许手动选择单个节点
-    "include-all": true, // 包含所有可用节点
-    proxies: [
-      ...availableRegions, // 所有地区节点
-      ...(hasOtherNodes ? ["其他节点"] : []),
-      "自动选择", "手动切换", "DIRECT"
-    ]
-  });
-
-  // --- 4. 其他节点组 ---
-  if (hasOtherNodes) {
-    // 构建 "exclude-filter" 所需的联合正则字符串
-    const excludePattern = Object.values(regionFilters)
-      .map(r => String(r.filter || '').replace(/\(\?i\)/g, ''))
-      .join('|');
-      
-    proxyGroups.push(createUrlTestGroup("其他节点", icons.GLOBAL, {
-      "include-all": true,
-      "exclude-filter": excludePattern
-    }));
-  }
-
-  // --- 5. 功能性分组 ---
-  proxyGroups.push({
-    name: "广告拦截",
-    icon: icons.AD_BLACK,
-    type: "select",
-    proxies: ["REJECT", "DIRECT"]
-  });
-
-  proxyGroups.push({
-    name: "应用净化",
-    icon: icons.HIJACKING,
-    type: "select",
-    proxies: ["REJECT", "DIRECT"]
-  });
-
-  proxyGroups.push({
-    name: "漏网之鱼",
-    icon: icons.FINAL,
-    type: "select",
-    proxies: finalProxies
-  });
-
-  proxyGroups.push({
-    name: "GLOBAL",
-    icon: icons.GLOBAL,
-    "include-all": true,
-    type: "select",
-    proxies: globalProxies
-  });
-
-  return proxyGroups;
-}
-
+const createGroup = (name, type, icon, proxies, extra = {}) => ({
+  name, type, icon, proxies, ...extra
+});
 
 /*
  * =================================================================
- * 主函数 (Main Function)
+ * 3. 核心处理 (Main)
  * =================================================================
  */
 
-/**
- * Clash 配置预处理器
- * @param {object} config 传入的原始配置对象
- * @returns {object} 处理后的配置对象
- */
 function main(config) {
-  // 1. 基本验证
-  if (!config || typeof config !== 'object') return config;
+  if (!config || !config.proxies) return config;
 
-  const allProxies = Array.isArray(config.proxies) ? config.proxies : [];
+  // 1. 过滤节点
+  const filterRegex = new RegExp(FILTER_KEYWORDS.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i');
+  const proxies = config.proxies.filter(p => !filterRegex.test(p.name));
 
-  // 2. 步骤 1: 按关键词过滤代理
-  const filteredProxies = filterProxiesByKeywords(allProxies, FILTER_KEYWORDS);
+  // 2. 识别有效地区
+  const activeRegions = REGIONS.filter(r => proxies.some(p => safeRegex(r.filter).test(p.name)));
+  const regionNames = activeRegions.map(r => r.name);
+  
+  const allRegionFilters = REGIONS.map(r => r.filter.replace(/\(\?i\)/g, '')).join('|');
+  const hasOtherNodes = proxies.some(p => !new RegExp(allRegionFilters, 'i').test(p.name));
+  
+  // 3. 构建基础节点池 (这是所有 UI 下拉菜单的基础)
+  // 注意：这里不再放入 "自动选择"，由各分组根据需要自行添加
+  const baseNodePool = [...regionNames];
+  if (hasOtherNodes) baseNodePool.push("其他节点");
+  baseNodePool.push("手动切换", "DIRECT");
 
-  // 3. 步骤 2: 将代理分类
-  const classification = classifyProxies(filteredProxies, REGION_FILTERS);
+  // 4. 构造代理组
+  const proxyGroups = [
+    // 核心出口：手动切换和自动选择作为首选
+    createGroup("节点选择", "select", ICONS.PROXY, ["自动选择", ...baseNodePool]),
+    
+    // 全局自动：对所有节点进行延迟测试
+    createGroup("自动选择", "url-test", ICONS.AUTO, [], { "include-all": true, interval: 300, tolerance: 50 }),
+    
+    // 手动切换：展示所有节点的单选列表
+    createGroup("手动切换", "select", ICONS.MANUAL, [], { "include-all": true }),
 
-  // 4. 步骤 3: 构建代理组
-  const proxyGroups = buildProxyGroups(classification, REGION_FILTERS, ICONS);
+    // AI 分组：默认可以使用地区组或全局自动
+    createGroup("AI节点", "select", ICONS.AI, ["自动选择", ...baseNodePool]),
 
-  // 5. 更新 config
-  config.proxies = filteredProxies;        // 使用过滤后的代理列表
-  config["proxy-groups"] = proxyGroups;   // 使用新生成的代理组
-  config["rule-providers"] = RULE_PROVIDERS_CONFIG; // 应用规则提供者
-  config["rules"] = RULES_CONFIG;         // 应用规则
+    // 动态地区组
+    ...activeRegions.map(r => createGroup(r.name, "url-test", r.icon, [], { 
+      "include-all": true, 
+      filter: r.filter, 
+      interval: 300 
+    })),
 
-  // 6. 返回修改后的配置
+    // 其他节点
+    ...(hasOtherNodes ? [
+      createGroup("其他节点", "url-test", ICONS.GLOBAL, [], {
+        "include-all": true,
+        "exclude-filter": allRegionFilters
+      })
+    ] : []),
+
+    createGroup("广告拦截", "select", ICONS.AD, ["REJECT", "DIRECT"]),
+    createGroup("应用净化", "select", ICONS.CLEAN, ["REJECT", "DIRECT"]),
+    
+    // 漏网之鱼
+    createGroup("漏网之鱼", "select", ICONS.FINAL, ["节点选择", "自动选择", "AI节点", ...baseNodePool]),
+    
+    // GLOBAL (Verge 界面有时会直接显示这个)
+    createGroup("GLOBAL", "select", ICONS.GLOBAL, ["节点选择", "自动选择", "AI节点", "广告拦截", "漏网之鱼"])
+  ];
+
+  // 5. 注入配置
+  config.proxies = proxies;
+  config["proxy-groups"] = proxyGroups;
+
+  // 6. 注入 Rule Providers
+  config["rule-providers"] = Object.fromEntries(
+    Object.entries(RULE_PROVIDERS_BASE).map(([name, url]) => [
+      name, 
+      {
+        type: "http",
+        behavior: (name === "ChinaDomain") ? "domain" : (name === "ChinaCompanyIp" ? "ipcidr" : "classical"),
+        url: url,
+        path: `./ruleset/${name}.list`,
+        interval: 86400,
+        format: "text"
+      }
+    ])
+  );
+
+  // 7. 规则
+  config["rules"] = [
+    "RULE-SET,LocalAreaNetwork,DIRECT",
+    "RULE-SET,UnBan,DIRECT",
+    "RULE-SET,AI,AI节点",
+    "RULE-SET,BanAD,广告拦截",
+    "RULE-SET,BanProgramAD,应用净化",
+    "RULE-SET,ProxyGFWlist,节点选择",
+    "RULE-SET,ChinaDomain,DIRECT",
+    "RULE-SET,ChinaCompanyIp,DIRECT",
+    "RULE-SET,Download,DIRECT",
+    "DOMAIN-SUFFIX,cloudflare.com,节点选择",
+    "DOMAIN-SUFFIX,anlu.fun,节点选择",
+    "DOMAIN-SUFFIX,linux.do,节点选择",
+    "GEOIP,CN,DIRECT",
+    "MATCH,漏网之鱼"
+  ];
+
   return config;
 }
