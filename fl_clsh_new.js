@@ -1,6 +1,6 @@
 /*
  * =================================================================
- * 全量脚本 - 适配 Stash / Clash 预处理器
+ * 完整脚本
  * =================================================================
  */
 
@@ -24,7 +24,7 @@ const RULES_CONFIG = [
   "MATCH,漏网之鱼"
 ];
 
-// 2. 规则提供者配置 (Provider)
+// 2. 规则提供者
 const RULE_PROVIDERS_CONFIG = {
   LocalAreaNetwork: { url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/LocalAreaNetwork.list", path: "./ruleset/LocalAreaNetwork.list", behavior: "classical", interval: 86400, format: "text", type: "http" },
   UnBan: { url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/UnBan.list", path: "./ruleset/UnBan.list", behavior: "classical", interval: 86400, format: "text", type: "http" },
@@ -37,7 +37,6 @@ const RULE_PROVIDERS_CONFIG = {
   AI: { url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/AI.list", path: "./ruleset/AI.list", behavior: "classical", interval: 86400, format: "text", type: "http" }
 };
 
-// 3. 图标 & 过滤配置
 const ICONS = {
   US: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png",
   JP: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png",
@@ -51,7 +50,8 @@ const ICONS = {
   AD_BLACK: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AdBlack.png",
   HIJACKING: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hijacking.png",
   FINAL: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png",
-  AI: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AI.png"
+  AI: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AI.png",
+  SAVING: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cloud_Download.png"
 };
 
 const FILTER_KEYWORDS = ['群', '邀请', '返利', '循环', '官网', '客服', '网站', '网址', '获取', '订阅', '流量', '到期', '机场', '下次', '版本', '官址', '备用', '过期', '已用', '联系', '邮箱', '工单', '贩卖', '通知', '倒卖', '防止', '国内', '建议', '地址', '频道', '无法', '说明', '使用', '提示', '特别', '访问', '支持', '10x', '8x', '6x'];
@@ -64,105 +64,85 @@ const REGION_FILTERS = {
   "台湾节点": { icon: ICONS.TW, filter: "(?i)台|新北|彰化|TW|Taiwan" }
 };
 
-// 预编译过滤正则
 const KEYWORD_REGEXP = new RegExp(FILTER_KEYWORDS.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i');
 
-/**
- * 主处理函数
- */
 function main(config) {
-  // 1. 基础验证：确保 config 和 proxies 存在
   if (!config || !Array.isArray(config.proxies)) return config;
 
-  // 2. 节点过滤
   const filteredProxies = config.proxies.filter(p => p && p.name && !KEYWORD_REGEXP.test(p.name));
 
-  // 3. 分类准备
   const activeRegions = [];
   const regionSpecs = Object.entries(REGION_FILTERS).map(([name, cfg]) => {
     const cleanPattern = cfg.filter.replace(/\(\?i\)/g, '');
     const regex = new RegExp(cleanPattern, 'i');
-    
-    // 检查此地区是否有节点，有才添加
-    if (filteredProxies.some(p => regex.test(p.name))) {
-      activeRegions.push(name);
-    }
-    
+    if (filteredProxies.some(p => regex.test(p.name))) activeRegions.push(name);
     return { name, icon: cfg.icon, rawFilter: cfg.filter, regex };
   });
 
-  const hasOtherNodes = filteredProxies.some(p => 
-    !regionSpecs.some(spec => spec.regex.test(p.name))
-  );
+  const hasOtherNodes = filteredProxies.some(p => !regionSpecs.some(spec => spec.regex.test(p.name)));
 
-  // 4. 构建代理组
   const groups = [];
 
-  // --- 核心主组 ---
+  // --- 核心主组 (加入省流节点) ---
   groups.push({
     name: "节点选择",
     type: "select",
     icon: ICONS.PROXY,
-    proxies: ["自动选择", "手动切换", "AI节点", ...activeRegions, ...(hasOtherNodes ? ["其他节点"] : []), "DIRECT"]
+    proxies: ["自动选择", "省流节点", "手动切换", "AI节点", ...activeRegions, ...(hasOtherNodes ? ["其他节点"] : []), "DIRECT"]
+  });
+
+  // --- 新增：省流节点 (自动测速并过滤高倍率) ---
+  groups.push({
+    name: "省流节点",
+    type: "url-test",
+    icon: ICONS.SAVING,
+    interval: 300,
+    tolerance: 50,
+    "include-all": true,
+    // 排除包含 10x, 9x, 8x, 3x, 2x 的节点
+    "exclude-filter": "(?i)10x|9x|8x|7x|6x|5x|4x|3x|2x"
   });
 
   groups.push({ name: "自动选择", type: "url-test", icon: ICONS.AUTO, interval: 300, tolerance: 50, "include-all": true });
   groups.push({ name: "手动切换", type: "select", icon: ICONS.MANUAL, "include-all": true });
 
-  // --- 地区组 ---
+  // 地区组
   regionSpecs.forEach(r => {
     if (activeRegions.includes(r.name)) {
-      groups.push({
-        name: r.name,
-        type: "url-test",
-        icon: r.icon,
-        interval: 300,
-        tolerance: 50,
-        "include-all": true,
-        filter: r.rawFilter
-      });
+      groups.push({ name: r.name, type: "url-test", icon: r.icon, interval: 300, tolerance: 50, "include-all": true, filter: r.rawFilter });
     }
   });
 
-  // --- AI 节点组 (包含自动排除香港逻辑) ---
+  // AI 节点组
   groups.push({
     name: "AI节点",
     type: "select",
     icon: ICONS.AI,
     "include-all": true,
-    // 排除香港、中国，保留美日新台等主流 AI 可用区
     filter: "(?i)^(?!.*(港|HK|Hong Kong|CN|中国)).*(美|US|Japan|日本|SG|新加坡|坡|TW|台湾)",
-    proxies: ["自动选择", ...activeRegions]
+    proxies: ["自动选择", "省流节点", ...activeRegions]
   });
 
-  // --- 其他节点 ---
+  // 其他节点
   if (hasOtherNodes) {
     const excludePattern = regionSpecs.map(r => r.rawFilter.replace(/\(\?i\)/g, '')).join('|');
-    groups.push({
-      name: "其他节点",
-      type: "url-test",
-      icon: ICONS.GLOBAL,
-      interval: 300,
-      "include-all": true,
-      "exclude-filter": excludePattern
-    });
+    groups.push({ name: "其他节点", type: "url-test", icon: ICONS.GLOBAL, interval: 300, "include-all": true, "exclude-filter": excludePattern });
   }
 
-  // --- 功能组 ---
+  // 功能组
   groups.push({ name: "广告拦截", type: "select", icon: ICONS.AD_BLACK, proxies: ["REJECT", "DIRECT"] });
   groups.push({ name: "应用净化", type: "select", icon: ICONS.HIJACKING, proxies: ["REJECT", "DIRECT"] });
-  groups.push({ name: "漏网之鱼", type: "select", icon: ICONS.FINAL, proxies: ["节点选择", "AI节点", "自动选择", "DIRECT"] });
+  groups.push({ name: "漏网之鱼", type: "select", icon: ICONS.FINAL, proxies: ["节点选择", "省流节点", "自动选择", "DIRECT"] });
 
-  // --- 全局组 ---
+  // 全局组
   groups.push({
     name: "GLOBAL",
     type: "select",
     icon: ICONS.GLOBAL,
     "include-all": true,
-    proxies: ["节点选择", "AI节点", "广告拦截", "漏网之鱼"]
+    proxies: ["节点选择", "省流节点", "AI节点", "广告拦截", "漏网之鱼"]
   });
 
-  // 5. 应用到配置
   config.proxies = filteredProxies;
   config["proxy-groups"] = groups;
   config["rule-providers"] = RULE_PROVIDERS_CONFIG;
