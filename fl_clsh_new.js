@@ -1,10 +1,4 @@
-/*
- * =================================================================
- * 完整脚本
- * =================================================================
- */
-
-// 1. 规则集配置
+// 规则集配置
 const RULES_CONFIG = [
   "RULE-SET,LocalAreaNetwork,DIRECT",
   "RULE-SET,UnBan,DIRECT",
@@ -16,15 +10,13 @@ const RULES_CONFIG = [
   "RULE-SET,Download,DIRECT",
   "RULE-SET,AI,AI节点",
   "DOMAIN-SUFFIX,cloudflare.com,节点选择",
-  "DOMAIN-SUFFIX,anlu.fun,节点选择",
-  "DOMAIN-SUFFIX,linux.do,节点选择",
   "DOMAIN-SUFFIX,googleapis.com,节点选择",
   "DOMAIN-SUFFIX,antigravity.google,节点选择",
   "GEOIP,CN,DIRECT",
   "MATCH,漏网之鱼"
 ];
 
-// 2. 规则提供者
+// 规则提供者
 const RULE_PROVIDERS_CONFIG = {
   LocalAreaNetwork: { url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/LocalAreaNetwork.list", path: "./ruleset/LocalAreaNetwork.list", behavior: "classical", interval: 86400, format: "text", type: "http" },
   UnBan: { url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/UnBan.list", path: "./ruleset/UnBan.list", behavior: "classical", interval: 86400, format: "text", type: "http" },
@@ -51,7 +43,7 @@ const ICONS = {
   HIJACKING: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hijacking.png",
   FINAL: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png",
   AI: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AI.png",
-  SAVING: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cloud_Download.png"
+  SAVING: "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Brown.png"
 };
 
 const FILTER_KEYWORDS = ['群', '邀请', '返利', '循环', '官网', '客服', '网站', '网址', '获取', '订阅', '流量', '到期', '机场', '下次', '版本', '官址', '备用', '过期', '已用', '联系', '邮箱', '工单', '贩卖', '通知', '倒卖', '防止', '国内', '建议', '地址', '频道', '无法', '说明', '使用', '提示', '特别', '访问', '支持', '10x', '8x', '6x'];
@@ -66,10 +58,24 @@ const REGION_FILTERS = {
 
 const KEYWORD_REGEXP = new RegExp(FILTER_KEYWORDS.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i');
 
+
+// --- 移除字符串中的 Emoji（包括国旗符号） ---
+function removeEmoji(str) {
+  if (!str) return str;
+  const emojiRegex = /[\u{1F1E6}-\u{1F1FF}]{2}|[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{27BF}]/gu;
+  return str.replace(emojiRegex, '').trim();
+}
+
 function main(config) {
   if (!config || !Array.isArray(config.proxies)) return config;
 
-  const filteredProxies = config.proxies.filter(p => p && p.name && !KEYWORD_REGEXP.test(p.name));
+  // --- 修改处：过滤关键字并移除节点名称中的 Emoji ---
+  const filteredProxies = config.proxies
+    .filter(p => p && p.name && !KEYWORD_REGEXP.test(p.name))
+    .map(p => {
+      p.name = removeEmoji(p.name);
+      return p;
+    });
 
   const activeRegions = [];
   const regionSpecs = Object.entries(REGION_FILTERS).map(([name, cfg]) => {
@@ -83,7 +89,7 @@ function main(config) {
 
   const groups = [];
 
-  // --- 核心主组 (加入省流节点) ---
+  // --- 核心主组 ---
   groups.push({
     name: "节点选择",
     type: "select",
@@ -91,7 +97,7 @@ function main(config) {
     proxies: ["自动选择", "省流节点", "手动切换", "AI节点", ...activeRegions, ...(hasOtherNodes ? ["其他节点"] : []), "DIRECT"]
   });
 
-  // --- 新增：省流节点 (自动测速并过滤高倍率) ---
+  // --- 省流节点 ---
   groups.push({
     name: "省流节点",
     type: "url-test",
@@ -99,7 +105,6 @@ function main(config) {
     interval: 300,
     tolerance: 50,
     "include-all": true,
-    // 排除包含 10x, 9x, 8x, 3x, 2x 的节点
     "exclude-filter": "(?i)10x|9x|8x|7x|6x|5x|4x|3x|2x"
   });
 
