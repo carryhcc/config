@@ -1,1267 +1,1265 @@
+/*
+ * =================================================================
+ * FlClash / Mihomo 完整覆写脚本
+ * =================================================================
+ *
+ * 功能：
+ * 1. 节点自动测速
+ * 2. 0.1x 省流节点自动测速
+ * 3. 美国 / 日本 / 新加坡 / 香港 / 台湾地区分组
+ * 4. AI 节点分组
+ * 5. 广告拦截 / 应用净化
+ * 6. DNS Fake-IP
+ * 7. 国内 / 国外 DNS 分流
+ * 8. NTP 时间同步
+ * 9. 避免 invalid group
+ *
+ * =================================================================
+ */
 
 
 /*
- * =================================================================
- * FlClash / Mihomo 完整覆写脚本
- * =================================================================
- *
- * 功能：
- * 1. 节点自动测速
- * 2. 0.1x 省流节点自动测速
- * 3. 美国 / 日本 / 新加坡 / 香港 / 台湾地区分组
- * 4. AI 节点分组
- * 5. 广告拦截 / 应用净化
- * 6. DNS Fake-IP
- * 7. 国内 / 国外 DNS 分流
- * 8. NTP 时间同步
- * 9. 避免 invalid group
- *
- * =================================================================
- */
+ * =================================================================
+ * 1. 规则集
+ * =================================================================
+ */
 
+const RULES_CONFIG = [
+  "RULE-SET,LocalAreaNetwork,DIRECT",
+  "RULE-SET,UnBan,DIRECT",
 
-/*
- * =================================================================
- * 1. 规则集
- * =================================================================
- */
+  "RULE-SET,BanAD,广告拦截",
+  "RULE-SET,BanProgramAD,应用净化",
 
-const RULES_CONFIG = [
-  "RULE-SET,LocalAreaNetwork,DIRECT",
-  "RULE-SET,UnBan,DIRECT",
+  "RULE-SET,ProxyGFWlist,节点选择",
 
-  "RULE-SET,BanAD,广告拦截",
-  "RULE-SET,BanProgramAD,应用净化",
+  "RULE-SET,ChinaDomain,DIRECT",
+  "RULE-SET,ChinaCompanyIp,DIRECT",
 
-  "RULE-SET,ProxyGFWlist,节点选择",
+  "RULE-SET,Download,DIRECT",
 
-  "RULE-SET,ChinaDomain,DIRECT",
-  "RULE-SET,ChinaCompanyIp,DIRECT",
+  "RULE-SET,AI,AI节点",
 
-  "RULE-SET,Download,DIRECT",
+  "DOMAIN-SUFFIX,cloudflare.com,节点选择",
+  "DOMAIN-SUFFIX,anlu.fun,节点选择",
+  "DOMAIN-SUFFIX,linux.do,节点选择",
+  "DOMAIN-SUFFIX,googleapis.com,节点选择",
+  "DOMAIN-SUFFIX,antigravity.google,节点选择",
 
-  "RULE-SET,AI,AI节点",
+  "GEOIP,CN,DIRECT",
 
-  "DOMAIN-SUFFIX,cloudflare.com,节点选择",
-  "DOMAIN-SUFFIX,anlu.fun,节点选择",
-  "DOMAIN-SUFFIX,linux.do,节点选择",
-  "DOMAIN-SUFFIX,googleapis.com,节点选择",
-  "DOMAIN-SUFFIX,antigravity.google,节点选择",
-
-  "GEOIP,CN,DIRECT",
-
-  "MATCH,漏网之鱼"
+  "MATCH,漏网之鱼"
 ];
 
 
 /*
- * =================================================================
- * 2. Rule Providers
- * =================================================================
- */
+ * =================================================================
+ * 2. Rule Providers
+ * =================================================================
+ */
 
-const RULE_PROVIDERS_CONFIG = {
+const RULE_PROVIDERS_CONFIG = {
 
-  LocalAreaNetwork: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/LocalAreaNetwork.list",
-    path: "./ruleset/LocalAreaNetwork.list",
-    behavior: "classical",
-    interval: 86400,
-    format: "text",
-    type: "http"
-  },
+  LocalAreaNetwork: {
+    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/LocalAreaNetwork.list",
+    path: "./ruleset/LocalAreaNetwork.list",
+    behavior: "classical",
+    interval: 86400,
+    format: "text",
+    type: "http"
+  },
 
-  UnBan: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/UnBan.list",
-    path: "./ruleset/UnBan.list",
-    behavior: "classical",
-    interval: 86400,
-    format: "text",
-    type: "http"
-  },
+  UnBan: {
+    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/UnBan.list",
+    path: "./ruleset/UnBan.list",
+    behavior: "classical",
+    interval: 86400,
+    format: "text",
+    type: "http"
+  },
 
-  BanAD: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanAD.list",
-    path: "./ruleset/BanAD.list",
-    behavior: "classical",
-    interval: 86400,
-    format: "text",
-    type: "http"
-  },
+  BanAD: {
+    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanAD.list",
+    path: "./ruleset/BanAD.list",
+    behavior: "classical",
+    interval: 86400,
+    format: "text",
+    type: "http"
+  },
 
-  BanProgramAD: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanProgramAD.list",
-    path: "./ruleset/BanProgramAD.list",
-    behavior: "classical",
-    interval: 86400,
-    format: "text",
-    type: "http"
-  },
+  BanProgramAD: {
+    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanProgramAD.list",
+    path: "./ruleset/BanProgramAD.list",
+    behavior: "classical",
+    interval: 86400,
+    format: "text",
+    type: "http"
+  },
 
-  ProxyGFWlist: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ProxyGFWlist.list",
-    path: "./ruleset/ProxyGFWlist.list",
-    behavior: "classical",
-    interval: 86400,
-    format: "text",
-    type: "http"
-  },
+  ProxyGFWlist: {
+    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ProxyGFWlist.list",
+    path: "./ruleset/ProxyGFWlist.list",
+    behavior: "classical",
+    interval: 86400,
+    format: "text",
+    type: "http"
+  },
 
-  ChinaDomain: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaDomain.list",
-    path: "./ruleset/ChinaDomain.list",
-    behavior: "domain",
-    interval: 86400,
-    format: "text",
-    type: "http"
-  },
+  ChinaDomain: {
+    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaDomain.list",
+    path: "./ruleset/ChinaDomain.list",
+    behavior: "domain",
+    interval: 86400,
+    format: "text",
+    type: "http"
+  },
 
-  ChinaCompanyIp: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaCompanyIp.list",
-    path: "./ruleset/ChinaCompanyIp.list",
-    behavior: "ipcidr",
-    interval: 86400,
-    format: "text",
-    type: "http"
-  },
+  ChinaCompanyIp: {
+    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaCompanyIp.list",
+    path: "./ruleset/ChinaCompanyIp.list",
+    behavior: "ipcidr",
+    interval: 86400,
+    format: "text",
+    type: "http"
+  },
 
-  Download: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Download.list",
-    path: "./ruleset/Download.list",
-    behavior: "classical",
-    interval: 86400,
-    format: "text",
-    type: "http"
-  },
+  Download: {
+    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Download.list",
+    path: "./ruleset/Download.list",
+    behavior: "classical",
+    interval: 86400,
+    format: "text",
+    type: "http"
+  },
 
-  AI: {
-    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/AI.list",
-    path: "./ruleset/AI.list",
-    behavior: "classical",
-    interval: 86400,
-    format: "text",
-    type: "http"
-  }
+  AI: {
+    url: "https://testingcf.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Ruleset/AI.list",
+    path: "./ruleset/AI.list",
+    behavior: "classical",
+    interval: 86400,
+    format: "text",
+    type: "http"
+  }
 };
 
 
 /*
- * =================================================================
- * 3. 图标
- * =================================================================
- */
+ * =================================================================
+ * 3. 图标
+ * =================================================================
+ */
 
-const ICONS = {
+const ICONS = {
 
-  US:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png",
+  US:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png",
 
-  JP:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png",
+  JP:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png",
 
-  SG:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Singapore.png",
+  SG:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Singapore.png",
 
-  HK:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hong_Kong.png",
+  HK:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hong_Kong.png",
 
-  TW:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Taiwan.png",
+  TW:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Taiwan.png",
 
-  PROXY:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Proxy.png",
+  PROXY:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Proxy.png",
 
-  AUTO:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png",
+  AUTO:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png",
 
-  MANUAL:
-    "https://testingcf.jsdelivr.net/gh/shindgewongxj/WHATSINStash@master/icon/select.png",
+  MANUAL:
+    "https://testingcf.jsdelivr.net/gh/shindgewongxj/WHATSINStash@master/icon/select.png",
 
-  GLOBAL:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Global.png",
+  GLOBAL:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Global.png",
 
-  AD_BLACK:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AdBlack.png",
+  AD_BLACK:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AdBlack.png",
 
-  HIJACKING:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hijacking.png",
+  HIJACKING:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hijacking.png",
 
-  FINAL:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png",
+  FINAL:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png",
 
-  AI:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AI.png",
+  AI:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AI.png",
 
-  SAVING:
-    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cloud_Download.png"
+  SAVING:
+    "https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cloud_Download.png"
 };
 
 
 /*
- * =================================================================
- * 4. 节点过滤
- * =================================================================
- */
+ * =================================================================
+ * 4. 节点过滤
+ * =================================================================
+ */
 
-const FILTER_KEYWORDS = [
-  "群",
-  "邀请",
-  "返利",
-  "循环",
-  "官网",
-  "客服",
-  "网站",
-  "网址",
-  "获取",
-  "订阅",
-  "流量",
-  "到期",
-  "机场",
-  "下次",
-  "版本",
-  "官址",
-  "备用",
-  "过期",
-  "已用",
-  "联系",
-  "邮箱",
-  "工单",
-  "贩卖",
-  "通知",
-  "倒卖",
-  "地址",
-  "频道"
+const FILTER_KEYWORDS = [
+  "群",
+  "邀请",
+  "返利",
+  "循环",
+  "官网",
+  "客服",
+  "网站",
+  "网址",
+  "获取",
+  "订阅",
+  "流量",
+  "到期",
+  "机场",
+  "下次",
+  "版本",
+  "官址",
+  "备用",
+  "过期",
+  "已用",
+  "联系",
+  "邮箱",
+  "工单",
+  "贩卖",
+  "通知",
+  "倒卖",
+  "地址",
+  "频道"
 ];
 
-const KEYWORD_REGEXP = new RegExp(
-  FILTER_KEYWORDS
-    .map(s =>
-      s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    )
-    .join("|"),
-  "i"
+const KEYWORD_REGEXP = new RegExp(
+  FILTER_KEYWORDS
+    .map(s =>
+      s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    )
+    .join("|"),
+  "i"
 );
 
 
 /*
- * =================================================================
- * 5. 地区过滤
- * =================================================================
- */
+ * =================================================================
+ * 5. 地区过滤
+ * =================================================================
+ */
 
-const REGION_FILTERS = {
+const REGION_FILTERS = {
 
-  "美国节点": {
-    icon: ICONS.US,
+  "美国节点": {
+    icon: ICONS.US,
 
-    filter:
-      "(?i)(美国|美國|US|USA|United States|UnitedStates|洛杉矶|洛杉磯|Los Angeles|圣何塞|聖何塞|San Jose|纽约|紐約|New York|西雅图|西雅圖|Seattle|芝加哥|Chicago|达拉斯|達拉斯|Dallas|波特兰|波特蘭|Portland|凤凰城|鳳凰城|Phoenix|硅谷|Silicon Valley)"
-  },
+    filter:
+      "(?i)(美国|美國|US|USA|United States|UnitedStates|洛杉矶|洛杉磯|Los Angeles|圣何塞|聖何塞|San Jose|纽约|紐約|New York|西雅图|西雅圖|Seattle|芝加哥|Chicago|达拉斯|達拉斯|Dallas|波特兰|波特蘭|Portland|凤凰城|鳳凰城|Phoenix|硅谷|Silicon Valley)"
+  },
 
-  "日本节点": {
-    icon: ICONS.JP,
+  "日本节点": {
+    icon: ICONS.JP,
 
-    filter:
-      "(?i)(日本|JP|Japan|东京|東京|Tokyo|大阪|Osaka|埼玉|Saitama|名古屋|Nagoya|福冈|福岡|Fukuoka)"
-  },
+    filter:
+      "(?i)(日本|JP|Japan|东京|東京|Tokyo|大阪|Osaka|埼玉|Saitama|名古屋|Nagoya|福冈|福岡|Fukuoka)"
+  },
 
-  "狮城节点": {
-    icon: ICONS.SG,
+  "狮城节点": {
+    icon: ICONS.SG,
 
-    filter:
-      "(?i)(新加坡|SG|Singapore|狮城|獅城)"
-  },
+    filter:
+      "(?i)(新加坡|SG|Singapore|狮城|獅城)"
+  },
 
-  "香港节点": {
-    icon: ICONS.HK,
+  "香港节点": {
+    icon: ICONS.HK,
 
-    filter:
-      "(?i)(香港|HK|Hong Kong|HongKong|Hong-Kong)"
-  },
+    filter:
+      "(?i)(香港|HK|Hong Kong|HongKong|Hong-Kong)"
+  },
 
-  "台湾节点": {
-    icon: ICONS.TW,
+  "台湾节点": {
+    icon: ICONS.TW,
 
-    filter:
-      "(?i)(台湾|臺灣|TW|Taiwan|台北|臺北|Taipei|新北|New Taipei|彰化|Changhua)"
-  }
+    filter:
+      "(?i)(台湾|臺灣|TW|Taiwan|台北|臺北|Taipei|新北|New Taipei|彰化|Changhua)"
+  }
 };
 
 
 /*
- * =================================================================
- * 6. 测速参数
- * =================================================================
- */
+ * =================================================================
+ * 6. 测速参数
+ * =================================================================
+ */
 
-const TEST_URL =
-  "https://www.gstatic.com/generate_204";
+const TEST_URL =
+  "https://www.gstatic.com/generate_204";
 
-const TEST_INTERVAL = 1800;
+const TEST_INTERVAL = 1800;
 
-const TEST_TOLERANCE = 50;
-
-
-/*
- * =================================================================
- * 7. 工具函数
- * =================================================================
- */
-
-function unique(list) {
-
-  return [...new Set(list)];
-
-}
-
-
-function getProxyNames(list) {
-
-  return list
-    .filter(
-      p =>
-        p &&
-        p.name
-    )
-    .map(
-      p =>
-        p.name
-    );
-
-}
-
-
-function matchNodes(nodes, regex) {
-
-  return nodes.filter(
-    name =>
-      regex.test(name)
-  );
-
-}
+const TEST_TOLERANCE = 50;
 
 
 /*
- * =================================================================
- * 8. 主函数
- * =================================================================
- */
+ * =================================================================
+ * 7. 工具函数
+ * =================================================================
+ */
 
-function main(config) {
-
-  if (
-    !config ||
-    !Array.isArray(config.proxies)
-  ) {
+function unique(list) {
 
-    return config;
-
-  }
-
+  return [...new Set(list)];
 
-  /*
-   * ---------------------------------------------------------------
-   * 8.1 过滤节点
-   * ---------------------------------------------------------------
-   */
+}
 
-  const filteredProxies =
-    config.proxies.filter(
-      p =>
-        p &&
-        p.name &&
-        !KEYWORD_REGEXP.test(p.name)
-    );
 
+function getProxyNames(list) {
 
-  /*
-   * 所有真实节点
-   */
+  return list
+    .filter(
+      p =>
+        p &&
+        p.name
+    )
+    .map(
+      p =>
+        p.name
+    );
 
-  const ALL_NODES =
-    unique(
-      getProxyNames(
-        filteredProxies
-      )
-    );
+}
 
 
-  /*
-   * ---------------------------------------------------------------
-   * 8.2 地区节点
-   * ---------------------------------------------------------------
-   */
+function matchNodes(nodes, regex) {
 
-  const regionSpecs =
-    Object.entries(
-      REGION_FILTERS
-    )
-    .map(
-      ([name, cfg]) => {
+  return nodes.filter(
+    name =>
+      regex.test(name)
+  );
 
-        const pattern =
-          cfg.filter.replace(
-            /\(\?i\)/g,
-            ""
-          );
-
-        const regex =
-          new RegExp(
-            pattern,
-            "i"
-          );
-
-        const nodes =
-          matchNodes(
-            ALL_NODES,
-            regex
-          );
-
-        return {
-
-          name,
-
-          icon:
-            cfg.icon,
-
-          regex,
-
-          nodes
-
-        };
-
-      }
-    );
-
-
-  /*
-   * ---------------------------------------------------------------
-   * 8.3 有效地区
-   * ---------------------------------------------------------------
-   */
-
-  const activeRegions =
-    regionSpecs
-      .filter(
-        region =>
-          region.nodes.length > 0
-      )
-      .map(
-        region =>
-          region.name
-      );
-
-
-  /*
-   * ---------------------------------------------------------------
-   * 8.4 其他节点
-   * ---------------------------------------------------------------
-   */
-
-  const categorizedNodes =
-    new Set();
-
-  regionSpecs.forEach(
-    region => {
-
-      region.nodes.forEach(
-        node =>
-          categorizedNodes.add(node)
-      );
+}
 
-    }
-  );
 
+/*
+ * =================================================================
+ * 8. 主函数
+ * =================================================================
+ */
 
-  const otherNodes =
-    ALL_NODES.filter(
-      node =>
-        !categorizedNodes.has(node)
-    );
+function main(config) {
 
+  if (
+    !config ||
+    !Array.isArray(config.proxies)
+  ) {
 
-  /*
-   * ---------------------------------------------------------------
-   * 8.5 0.1x 省流节点
-   * ---------------------------------------------------------------
-   */
+    return config;
 
-  const savingRegex =
-    /0\.1x/i;
+  }
 
-  const savingNodes =
-    ALL_NODES.filter(
-      node =>
-        savingRegex.test(node)
-    );
 
+  /*
+   * ---------------------------------------------------------------
+   * 8.1 过滤节点
+   * ---------------------------------------------------------------
+   */
 
-  /*
-   * ---------------------------------------------------------------
-   * 8.6 AI 节点
-   *
-   * 排除：
-   * 香港
-   * 中国大陆
-   *
-   * 允许：
-   * 美国
-   * 日本
-   * 新加坡
-   * 台湾
-   * ---------------------------------------------------------------
-   */
+  const filteredProxies =
+    config.proxies.filter(
+      p =>
+        p &&
+        p.name &&
+        !KEYWORD_REGEXP.test(p.name)
+    );
 
-  const aiAllowRegex =
-    /(?:美国|美國|US|USA|United States|UnitedStates|日本|JP|Japan|新加坡|SG|Singapore|狮城|獅城|台湾|臺灣|TW|Taiwan|台北|臺北|Taipei)/i;
 
-  const aiExcludeRegex =
-    /(?:香港|HK|Hong Kong|HongKong|中国|中國|CN|China)/i;
+  /*
+   * 所有真实节点
+   */
 
-  const aiNodes =
-    ALL_NODES.filter(
-      node =>
-        aiAllowRegex.test(node) &&
-        !aiExcludeRegex.test(node)
-    );
+  const ALL_NODES =
+    unique(
+      getProxyNames(
+        filteredProxies
+      )
+    );
 
 
-  /*
-   * =================================================================
-   * 9. 代理组
-   * =================================================================
-   */
+  /*
+   * ---------------------------------------------------------------
+   * 8.2 地区节点
+   * ---------------------------------------------------------------
+   */
 
-  const groups = [];
+  const regionSpecs =
+    Object.entries(
+      REGION_FILTERS
+    )
+    .map(
+      ([name, cfg]) => {
 
+        const pattern =
+          cfg.filter.replace(
+            /\(\?i\)/g,
+            ""
+          );
 
-  /*
-   * ---------------------------------------------------------------
-   * 9.1 自动选择
-   * ---------------------------------------------------------------
-   */
+        const regex =
+          new RegExp(
+            pattern,
+            "i"
+          );
+
+        const nodes =
+          matchNodes(
+            ALL_NODES,
+            regex
+          );
+
+        return {
 
-  if (
-    ALL_NODES.length > 0
-  ) {
+          name,
+
+          icon:
+            cfg.icon,
+
+          regex,
+
+          nodes
 
-    groups.push({
+        };
+
+      }
+    );
+
+
+  /*
+   * ---------------------------------------------------------------
+   * 8.3 有效地区
+   * ---------------------------------------------------------------
+   */
 
-      name:
-        "自动选择",
+  const activeRegions =
+    regionSpecs
+      .filter(
+        region =>
+          region.nodes.length > 0
+      )
+      .map(
+        region =>
+          region.name
+      );
 
-      type:
-        "url-test",
 
-      icon:
-        ICONS.AUTO,
+  /*
+   * ---------------------------------------------------------------
+   * 8.4 其他节点
+   * ---------------------------------------------------------------
+   */
 
-      proxies:
-        ALL_NODES,
+  const categorizedNodes =
+    new Set();
 
-      url:
-        TEST_URL,
+  regionSpecs.forEach(
+    region => {
 
-      interval:
-        TEST_INTERVAL,
+      region.nodes.forEach(
+        node =>
+          categorizedNodes.add(node)
+      );
 
-      tolerance:
-        TEST_TOLERANCE
+    }
+  );
 
-    });
 
-  }
+  const otherNodes =
+    ALL_NODES.filter(
+      node =>
+        !categorizedNodes.has(node)
+    );
 
 
-  /*
-   * ---------------------------------------------------------------
-   * 9.2 省流节点
-   * ---------------------------------------------------------------
-   */
+  /*
+   * ---------------------------------------------------------------
+   * 8.5 0.1x 省流节点
+   * ---------------------------------------------------------------
+   */
 
-  if (
-    savingNodes.length > 0
-  ) {
+  const savingRegex =
+    /0\.1x/i;
 
-    groups.push({
+  const savingNodes =
+    ALL_NODES.filter(
+      node =>
+        savingRegex.test(node)
+    );
 
-      name:
-        "省流节点",
 
-      type:
-        "url-test",
+  /*
+   * ---------------------------------------------------------------
+   * 8.6 AI 节点
+   *
+   * 排除：
+   * 香港
+   * 中国大陆
+   *
+   * 允许：
+   * 美国
+   * 日本
+   * 新加坡
+   * 台湾
+   * ---------------------------------------------------------------
+   */
 
-      icon:
-        ICONS.SAVING,
+  const aiAllowRegex =
+    /(?:美国|美國|US|USA|United States|UnitedStates|日本|JP|Japan|新加坡|SG|Singapore|狮城|獅城|台湾|臺灣|TW|Taiwan|台北|臺北|Taipei)/i;
 
-      proxies:
-        savingNodes,
+  const aiExcludeRegex =
+    /(?:香港|HK|Hong Kong|HongKong|中国|中國|CN|China)/i;
 
-      url:
-        TEST_URL,
+  const aiNodes =
+    ALL_NODES.filter(
+      node =>
+        aiAllowRegex.test(node) &&
+        !aiExcludeRegex.test(node)
+    );
 
-      interval:
-        TEST_INTERVAL,
 
-      tolerance:
-        TEST_TOLERANCE
+  /*
+   * =================================================================
+   * 9. 代理组
+   * =================================================================
+   */
 
-    });
+  const groups = [];
 
-  }
 
+  /*
+   * ---------------------------------------------------------------
+   * 9.1 自动选择
+   * ---------------------------------------------------------------
+   */
 
-  /*
-   * ---------------------------------------------------------------
-   * 9.3 手动切换
-   * ---------------------------------------------------------------
-   */
+  if (
+    ALL_NODES.length > 0
+  ) {
 
-  if (
-    ALL_NODES.length > 0
-  ) {
+    groups.push({
 
-    groups.push({
+      name:
+        "自动选择",
 
-      name:
-        "手动切换",
+      type:
+        "url-test",
 
-      type:
-        "select",
+      icon:
+        ICONS.AUTO,
 
-      icon:
-        ICONS.MANUAL,
+      proxies:
+        ALL_NODES,
 
-      proxies:
-        ALL_NODES
+      url:
+        TEST_URL,
 
-    });
+      interval:
+        TEST_INTERVAL,
 
-  }
+      tolerance:
+        TEST_TOLERANCE
 
+    });
 
-  /*
-   * ---------------------------------------------------------------
-   * 9.4 地区节点
-   * ---------------------------------------------------------------
-   */
+  }
 
-  regionSpecs.forEach(
-    region => {
 
-      if (
-        region.nodes.length === 0
-      ) {
+  /*
+   * ---------------------------------------------------------------
+   * 9.2 省流节点
+   * ---------------------------------------------------------------
+   */
 
-        return;
+  if (
+    savingNodes.length > 0
+  ) {
 
-      }
+    groups.push({
 
+      name:
+        "省流节点",
 
-      groups.push({
+      type:
+        "url-test",
 
-        name:
-          region.name,
+      icon:
+        ICONS.SAVING,
 
-        type:
-          "url-test",
+      proxies:
+        savingNodes,
 
-        icon:
-          region.icon,
+      url:
+        TEST_URL,
 
-        proxies:
-          region.nodes,
+      interval:
+        TEST_INTERVAL,
 
-        url:
-          TEST_URL,
+      tolerance:
+        TEST_TOLERANCE
 
-        interval:
-          TEST_INTERVAL,
+    });
 
-        tolerance:
-          TEST_TOLERANCE
+  }
 
-      });
 
-    }
-  );
+  /*
+   * ---------------------------------------------------------------
+   * 9.3 手动切换
+   * ---------------------------------------------------------------
+   */
 
+  if (
+    ALL_NODES.length > 0
+  ) {
 
-  /*
-   * ---------------------------------------------------------------
-   * 9.5 AI 节点
-   * ---------------------------------------------------------------
-   */
+    groups.push({
 
-  const aiGroupProxies = [];
+      name:
+        "手动切换",
 
+      type:
+        "select",
 
-  /*
-   * 自动选择
-   */
+      icon:
+        ICONS.MANUAL,
 
-  if (
-    ALL_NODES.length > 0
-  ) {
+      proxies:
+        ALL_NODES
 
-    aiGroupProxies.push(
-      "自动选择"
-    );
+    });
 
-  }
+  }
 
 
-  /*
-   * AI 地区组
-   *
-   * 不包含香港
-   */
+  /*
+   * ---------------------------------------------------------------
+   * 9.4 地区节点
+   * ---------------------------------------------------------------
+   */
 
-  [
-    "美国节点",
-    "日本节点",
-    "狮城节点",
-    "台湾节点"
-  ]
-  .forEach(
-    name => {
+  regionSpecs.forEach(
+    region => {
 
-      if (
-        activeRegions.includes(name)
-      ) {
+      if (
+        region.nodes.length === 0
+      ) {
 
-        aiGroupProxies.push(
-          name
-        );
+        return;
 
-      }
+      }
 
-    }
-  );
 
+      groups.push({
 
-  /*
-   * 没有可用节点时，
-   * 至少保证代理组合法
-   */
+        name:
+          region.name,
 
-  if (
-    aiGroupProxies.length === 0
-  ) {
+        type:
+          "url-test",
 
-    aiGroupProxies.push(
-      "DIRECT"
-    );
+        icon:
+          region.icon,
 
-  }
+        proxies:
+          region.nodes,
 
+        url:
+          TEST_URL,
 
-  groups.push({
+        interval:
+          TEST_INTERVAL,
 
-    name:
-      "AI节点",
+        tolerance:
+          TEST_TOLERANCE
 
-    type:
-      "select",
+      });
 
-    icon:
-      ICONS.AI,
+    }
+  );
 
-    proxies:
-      unique(
-        aiGroupProxies
-      )
 
-  });
+  /*
+   * ---------------------------------------------------------------
+   * 9.5 AI 节点
+   * ---------------------------------------------------------------
+   */
 
+  const aiGroupProxies = [];
 
-  /*
-   * ---------------------------------------------------------------
-   * 9.6 其他节点
-   * ---------------------------------------------------------------
-   */
 
-  if (
-    otherNodes.length > 0
-  ) {
+  /*
+   * 自动选择
+   */
 
-    groups.push({
+  if (
+    ALL_NODES.length > 0
+  ) {
 
-      name:
-        "其他节点",
+    aiGroupProxies.push(
+      "自动选择"
+    );
 
-      type:
-        "url-test",
+  }
 
-      icon:
-        ICONS.GLOBAL,
 
-      proxies:
-        otherNodes,
+  /*
+   * AI 地区组
+   *
+   * 不包含香港
+   */
 
-      url:
-        TEST_URL,
+  [
+    "美国节点",
+    "日本节点",
+    "狮城节点",
+    "台湾节点"
+  ]
+  .forEach(
+    name => {
 
-      interval:
-        TEST_INTERVAL,
+      if (
+        activeRegions.includes(name)
+      ) {
 
-      tolerance:
-        TEST_TOLERANCE
+        aiGroupProxies.push(
+          name
+        );
 
-    });
+      }
 
-  }
+    }
+  );
 
 
-  /*
-   * ---------------------------------------------------------------
-   * 9.7 广告拦截
-   * ---------------------------------------------------------------
-   */
+  /*
+   * 没有可用节点时，
+   * 至少保证代理组合法
+   */
 
-  groups.push({
+  if (
+    aiGroupProxies.length === 0
+  ) {
 
-    name:
-      "广告拦截",
+    aiGroupProxies.push(
+      "DIRECT"
+    );
 
-    type:
-      "select",
+  }
 
-    icon:
-      ICONS.AD_BLACK,
 
-    proxies: [
-      "REJECT",
-      "DIRECT"
-    ]
+  groups.push({
 
-  });
+    name:
+      "AI节点",
 
+    type:
+      "select",
 
-  /*
-   * ---------------------------------------------------------------
-   * 9.8 应用净化
-   * ---------------------------------------------------------------
-   */
+    icon:
+      ICONS.AI,
 
-  groups.push({
+    proxies:
+      unique(
+        aiGroupProxies
+      )
 
-    name:
-      "应用净化",
+  });
 
-    type:
-      "select",
 
-    icon:
-      ICONS.HIJACKING,
+  /*
+   * ---------------------------------------------------------------
+   * 9.6 其他节点
+   * ---------------------------------------------------------------
+   */
 
-    proxies: [
-      "REJECT",
-      "DIRECT"
-    ]
+  if (
+    otherNodes.length > 0
+  ) {
 
-  });
+    groups.push({
 
+      name:
+        "其他节点",
 
-  /*
-   * ---------------------------------------------------------------
-   * 9.9 节点选择
-   * ---------------------------------------------------------------
-   */
+      type:
+        "url-test",
 
-  const nodeSelectProxies = [];
+      icon:
+        ICONS.GLOBAL,
 
+      proxies:
+        otherNodes,
 
-  if (
-    ALL_NODES.length > 0
-  ) {
+      url:
+        TEST_URL,
 
-    nodeSelectProxies.push(
-      "自动选择"
-    );
+      interval:
+        TEST_INTERVAL,
 
-  }
+      tolerance:
+        TEST_TOLERANCE
 
+    });
 
-  if (
-    savingNodes.length > 0
-  ) {
+  }
 
-    nodeSelectProxies.push(
-      "省流节点"
-    );
 
-  }
+  /*
+   * ---------------------------------------------------------------
+   * 9.7 广告拦截
+   * ---------------------------------------------------------------
+   */
 
+  groups.push({
 
-  if (
-    ALL_NODES.length > 0
-  ) {
+    name:
+      "广告拦截",
 
-    nodeSelectProxies.push(
-      "手动切换"
-    );
+    type:
+      "select",
 
-  }
+    icon:
+      ICONS.AD_BLACK,
 
+    proxies: [
+      "REJECT",
+      "DIRECT"
+    ]
 
-  nodeSelectProxies.push(
-    "AI节点"
-  );
+  });
 
 
-  activeRegions.forEach(
-    region => {
+  /*
+   * ---------------------------------------------------------------
+   * 9.8 应用净化
+   * ---------------------------------------------------------------
+   */
 
-      nodeSelectProxies.push(
-        region
-      );
+  groups.push({
 
-    }
-  );
+    name:
+      "应用净化",
 
+    type:
+      "select",
 
-  if (
-    otherNodes.length > 0
-  ) {
+    icon:
+      ICONS.HIJACKING,
 
-    nodeSelectProxies.push(
-      "其他节点"
-    );
+    proxies: [
+      "REJECT",
+      "DIRECT"
+    ]
 
-  }
+  });
 
 
-  nodeSelectProxies.push(
-    "DIRECT"
-  );
+  /*
+   * ---------------------------------------------------------------
+   * 9.9 节点选择
+   * ---------------------------------------------------------------
+   */
 
+  const nodeSelectProxies = [];
 
-  groups.push({
 
-    name:
-      "节点选择",
+  if (
+    ALL_NODES.length > 0
+  ) {
 
-    type:
-      "select",
+    nodeSelectProxies.push(
+      "自动选择"
+    );
 
-    icon:
-      ICONS.PROXY,
+  }
 
-    proxies:
-      unique(
-        nodeSelectProxies
-      )
 
-  });
+  if (
+    savingNodes.length > 0
+  ) {
 
+    nodeSelectProxies.push(
+      "省流节点"
+    );
 
-  /*
-   * ---------------------------------------------------------------
-   * 9.10 漏网之鱼
-   * ---------------------------------------------------------------
-   */
+  }
 
-  const finalProxies = [
-    "节点选择"
-  ];
 
+  if (
+    ALL_NODES.length > 0
+  ) {
 
-  if (
-    savingNodes.length > 0
-  ) {
+    nodeSelectProxies.push(
+      "手动切换"
+    );
 
-    finalProxies.push(
-      "省流节点"
-    );
+  }
 
-  }
 
+  nodeSelectProxies.push(
+    "AI节点"
+  );
 
-  if (
-    ALL_NODES.length > 0
-  ) {
 
-    finalProxies.push(
-      "自动选择"
-    );
+  activeRegions.forEach(
+    region => {
 
-  }
+      nodeSelectProxies.push(
+        region
+      );
 
+    }
+  );
 
-  finalProxies.push(
-    "DIRECT"
-  );
 
+  if (
+    otherNodes.length > 0
+  ) {
 
-  groups.push({
+    nodeSelectProxies.push(
+      "其他节点"
+    );
 
-    name:
-      "漏网之鱼",
+  }
 
-    type:
-      "select",
 
-    icon:
-      ICONS.FINAL,
+  nodeSelectProxies.push(
+    "DIRECT"
+  );
 
-    proxies:
-      unique(
-        finalProxies
-      )
 
-  });
+  groups.push({
 
+    name:
+      "节点选择",
 
-  /*
-   * ---------------------------------------------------------------
-   * 9.11 GLOBAL
-   * ---------------------------------------------------------------
-   */
+    type:
+      "select",
 
-  groups.push({
+    icon:
+      ICONS.PROXY,
 
-    name:
-      "GLOBAL",
+    proxies:
+      unique(
+        nodeSelectProxies
+      )
 
-    type:
-      "select",
+  });
 
-    icon:
-      ICONS.GLOBAL,
 
-    proxies: [
-      "节点选择",
+  /*
+   * ---------------------------------------------------------------
+   * 9.10 漏网之鱼
+   * ---------------------------------------------------------------
+   */
 
-      ...(savingNodes.length > 0
-        ? ["省流节点"]
-        : []),
+  const finalProxies = [
+    "节点选择"
+  ];
 
-      "AI节点",
 
-      "广告拦截",
+  if (
+    savingNodes.length > 0
+  ) {
 
-      "漏网之鱼"
-    ]
+    finalProxies.push(
+      "省流节点"
+    );
 
-  });
+  }
 
 
-  /*
-   * =================================================================
-   * 10. DNS
-   * =================================================================
-   *
-   * Fake-IP 模式
-   *
-   * 国内：
-   *   阿里 DNS
-   *   腾讯 DNS
-   *
-   * 国外：
-   *   Cloudflare DoH
-   *   Google DoH
-   *
-   * =================================================================
-   */
+  if (
+    ALL_NODES.length > 0
+  ) {
 
-  config.dns = {
+    finalProxies.push(
+      "自动选择"
+    );
 
-    /*
-     * 开启 DNS
-     */
+  }
 
-    enable:
-      true,
 
+  finalProxies.push(
+    "DIRECT"
+  );
 
-    /*
-     * IPv6
-     *
-     * Android + 代理环境下，
-     * 没有稳定 IPv6 时关闭更稳。
-     */
 
-    ipv6:
-      false,
+  groups.push({
 
+    name:
+      "漏网之鱼",
 
-    /*
-     * Fake-IP
-     */
+    type:
+      "select",
 
-    "enhanced-mode":
-      "fake-ip",
+    icon:
+      ICONS.FINAL,
 
+    proxies:
+      unique(
+        finalProxies
+      )
 
-    /*
-     * Fake-IP 地址池
-     */
+  });
 
-    "fake-ip-range":
-      "198.18.0.1/16",
 
+  /*
+   * ---------------------------------------------------------------
+   * 9.11 GLOBAL
+   * ---------------------------------------------------------------
+   */
 
-    /*
-     * 不进行 Fake-IP 的域名
-     *
-     * 重点保护：
-     *
-     * - 局域网
-     * - localhost
-     * - Windows 网络检测
-     * - NTP
-     * - 本地 Home 网络
-     */
+  groups.push({
 
-    "fake-ip-filter": [
+    name:
+      "GLOBAL",
 
-      "*.lan",
+    type:
+      "select",
 
-      "*.local",
+    icon:
+      ICONS.GLOBAL,
 
-      "*.localhost",
+    proxies: [
+      "节点选择",
 
-      "localhost",
+      ...(savingNodes.length > 0
+        ? ["省流节点"]
+        : []),
 
-      "localhost.ptlogin2.qq.com",
+      "AI节点",
 
-      "+.msftconnecttest.com",
+      "广告拦截",
 
-      "+.msftncsi.com",
+      "漏网之鱼"
+    ]
 
-      "time.*.com",
+  });
 
-      "time.*.gov",
 
-      "time.*.edu.cn",
+  /*
+   * =================================================================
+   * 10. DNS
+   * =================================================================
+   *
+   * Fake-IP 模式
+   *
+   * 国内：
+   *   阿里 DNS
+   *   腾讯 DNS
+   *
+   * 国外：
+   *   Cloudflare DoH
+   *   Google DoH
+   *
+   * =================================================================
+   */
 
-      "time.apple.com",
+  config.dns = {
 
-      "time.windows.com",
+    /*
+     * 开启 DNS
+     */
 
-      "pool.ntp.org",
+    enable:
+      true,
 
-      "time.nist.gov",
 
-      "*.home.arpa"
-    ],
+    /*
+     * IPv6
+     *
+     * Android + 代理环境下，
+     * 没有稳定 IPv6 时关闭更稳。
+     */
 
+    ipv6:
+      false,
 
-    /*
-     * ===============================================================
-     * 国内 DNS
-     * ===============================================================
-     */
 
-    nameserver: [
+    /*
+     * Fake-IP
+     */
 
-      "223.5.5.5",
+    "enhanced-mode":
+      "fake-ip",
 
-      "119.29.29.29"
-    ],
 
+    /*
+     * Fake-IP 地址池
+     */
 
-    /*
-     * ===============================================================
-     * 国外 DNS
-     * ===============================================================
-     *
-     * 使用 DoH。
-     */
+    "fake-ip-range":
+      "198.18.0.1/16",
 
-    fallback: [
 
-      "https://1.1.1.1/dns-query",
+    /*
+     * 不进行 Fake-IP 的域名
+     *
+     * 重点保护：
+     *
+     * - 局域网
+     * - localhost
+     * - Windows 网络检测
+     * - NTP
+     * - 本地 Home 网络
+     */
 
-      "https://8.8.8.8/dns-query"
-    ],
+    "fake-ip-filter": [
 
+      "*.lan",
 
-    /*
-     * ===============================================================
-     * DNS Fallback 判断
-     * ===============================================================
-     */
+      "*.local",
 
-    "fallback-filter": {
+      "*.localhost",
 
-      /*
-       * GEOIP 判断
-       */
+      "localhost",
 
-      geoip:
-        true,
+      "localhost.ptlogin2.qq.com",
 
-      "geoip-code":
-        "CN",
+      "+.msftconnecttest.com",
 
+      "+.msftncsi.com",
 
-      /*
-       * 异常 IP
-       */
+      "time.*.com",
 
-      ipcidr: [
+      "time.*.gov",
 
-        "240.0.0.0/4",
+      "time.*.edu.cn",
 
-        "0.0.0.0/32",
+      "time.apple.com",
 
-        "127.0.0.0/8"
-      ]
-    }
-  };
+      "time.windows.com",
 
+      "pool.ntp.org",
 
-  /*
-   * =================================================================
-   * 11. NTP
-   * =================================================================
-   */
+      "time.nist.gov",
 
-  config.ntp = {
+      "*.home.arpa"
+    ],
 
-    enable:
-      true,
 
-    server:
-      "time.apple.com",
+    /*
+     * ===============================================================
+     * 国内 DNS
+     * ===============================================================
+     */
 
-    port:
-      123,
+    nameserver: [
 
-    interval:
-      3600,
+      "223.5.5.5",
 
-    "write-to-system":
-      false
-  };
+      "119.29.29.29"
+    ],
 
 
-  /*
-   * =================================================================
-   * 12. 写入配置
-   * =================================================================
-   */
+    /*
+     * ===============================================================
+     * 国外 DNS
+     * ===============================================================
+     *
+     * 使用 DoH。
+     */
 
-  config.proxies =
-    filteredProxies;
+    fallback: [
 
-  config["proxy-groups"] =
-    groups;
+      "https://1.1.1.1/dns-query",
 
-  config["rule-providers"] =
-    RULE_PROVIDERS_CONFIG;
+      "https://8.8.8.8/dns-query"
+    ],
 
-  config["rules"] =
-    RULES_CONFIG;
 
+    /*
+     * ===============================================================
+     * DNS Fallback 判断
+     * ===============================================================
+     */
 
-  /*
-   * =================================================================
-   * 13. 返回
-   * =================================================================
- */
+    "fallback-filter": {
 
-  return config;
+      /*
+       * GEOIP 判断
+       */
+
+      geoip:
+        true,
+
+      "geoip-code":
+        "CN",
+
+
+      /*
+       * 异常 IP
+       */
+
+      ipcidr: [
+
+        "240.0.0.0/4",
+
+        "0.0.0.0/32",
+
+        "127.0.0.0/8"
+      ]
+    }
+  };
+
+
+  /*
+   * =================================================================
+   * 11. NTP
+   * =================================================================
+   */
+
+  config.ntp = {
+
+    enable:
+      true,
+
+    server:
+      "time.apple.com",
+
+    port:
+      123,
+
+    interval:
+      3600,
+
+    "write-to-system":
+      false
+  };
+
+
+  /*
+   * =================================================================
+   * 12. 写入配置
+   * =================================================================
+   */
+
+  config.proxies =
+    filteredProxies;
+
+  config["proxy-groups"] =
+    groups;
+
+  config["rule-providers"] =
+    RULE_PROVIDERS_CONFIG;
+
+  config["rules"] =
+    RULES_CONFIG;
+
+
+  /*
+   * =================================================================
+   * 13. 返回
+   * =================================================================
+ */
+
+  return config;
 }
